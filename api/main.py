@@ -34,7 +34,7 @@ class AmazonCrawler:
     def __init__(self):
         self.dataCleaner = AmazonCleaner()
 
-        self.request_time_out = 60
+        self.request_time_out = 90
         self.session = None
 
     def request(self, taskDetail):
@@ -479,6 +479,7 @@ class AmazonCrawler:
 
 if __name__ == '__main__':
     crawler = AmazonCrawler()
+    crawler.test()
     crawler.rate()
     # scheduler =BlockingScheduler()
     # scheduler.add_job(crawler.test,'cron', month="*",day_of_week= "3", hour="9")
