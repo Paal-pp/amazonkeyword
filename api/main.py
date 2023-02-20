@@ -91,6 +91,7 @@ class AmazonCrawler:
         #     self.session = self.get_zipcode_session(self.session, zip_code)
         # result = func_timeout(self.request_time_out, lambda: self.session.get(url, headers=headers))
         print(f"code:{response.status_code}")
+        print(response.text)
         # print(response.text)
         if response.status_code==200:
             print("成功")
@@ -340,7 +341,6 @@ class AmazonCrawler:
                 cur.execute(insert_sql)
                 db.commit()
                 print("插入成功")
-        self.rate()
 
     def rate(self):
         keyword_select_sql = """
@@ -477,10 +477,11 @@ class AmazonCrawler:
                    'https': f'http://{ip}'}
         return proxies
 
+
 if __name__ == '__main__':
     crawler = AmazonCrawler()
     crawler.test()
-    crawler.rate()
+    # crawler.rate()
     # scheduler =BlockingScheduler()
     # scheduler.add_job(crawler.test,'cron', month="*",day_of_week= "3", hour="9")
     # scheduler.start()
