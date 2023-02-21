@@ -173,11 +173,12 @@ class program():
         nowdatetime = now.strftime("%Y-%m-%d")
         for solokeyword_inf in keyword_select_sql_res:
             solokeyword = solokeyword_inf[2]
+            dealsolokeyword =solokeyword.replace(" ","+")
             get_keyword_list = f"""
-            select * from keywordranking where keyword= '{solokeyword}' And datetime='{nowdatetime}'
+            select * from keywordranking where keyword= '{dealsolokeyword}' And datetime='{nowdatetime}'
             """
             get_keyword_list_myinf = f"""
-            select * from keywordranking where keyword= '{solokeyword}' AND YOR=1 AND datetime='{nowdatetime}'
+            select * from keywordranking where keyword= '{dealsolokeyword}' AND YOR=1 AND datetime='{nowdatetime}'
             """
             cur.execute(get_keyword_list)
             get_keyword_list_res = cur.fetchall()
@@ -192,10 +193,10 @@ class program():
             except ZeroDivisionError:
                 nature_rate =0
             get_keyword_list = f"""
-                        select * from adkeywordranking where keyword= '{solokeyword}' And datetime='{nowdatetime}'
+                        select * from adkeywordranking where keyword= '{dealsolokeyword}' And datetime='{nowdatetime}'
                         """
             get_keyword_list_myinf = f"""
-                        select * from adkeywordranking where keyword= '{solokeyword}' AND YOR=1 AND datetime='{nowdatetime}'
+                        select * from adkeywordranking where keyword= '{dealsolokeyword}' AND YOR=1 AND datetime='{nowdatetime}'
                         """
             cur.execute(get_keyword_list)
             get_keyword_list_res = cur.fetchall()
