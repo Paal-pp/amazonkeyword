@@ -25,7 +25,7 @@ db = mysql.connect(
     port=3306,
     user="root",
     passwd="Mld901",
-    db="advertising_distribution")
+    db="adresult")
 cur = db.cursor()
 
 
@@ -91,7 +91,7 @@ class AmazonCrawler:
         #     self.session = self.get_zipcode_session(self.session, zip_code)
         # result = func_timeout(self.request_time_out, lambda: self.session.get(url, headers=headers))
         print(f"code:{response.status_code}")
-        print(response.text)
+        # print(response.text)
         # print(response.text)
         if response.status_code==200:
             print("成功")

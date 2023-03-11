@@ -4,7 +4,16 @@ from proxycrawl import CrawlingAPI, ScraperAPI, LeadsAPI, ScreenshotsAPI, Storag
 from cleaner import *
 import pymysql as mysql
 import  sys
+import datetime
 
+global db,cur
+db = mysql.connect(
+    host="127.0.0.1",
+    port=3306,
+    user="root",
+    passwd="Mld901",
+    db="adresult")
+cur = db.cursor()
 
 class crawl():
     def retry(func):
@@ -33,13 +42,7 @@ class crawl():
 class program():
 
     def __int__(self):
-        self.db = mysql.connect(
-            host="127.0.0.1",
-            port=3306,
-            user="root",
-            passwd="Mld901",
-            db="advertising_distribution")
-        self.cur = self.db.cursor()
+        pass
 
     def url_link(self,keyword,page):
         url_link=f"""https://www.amazon.com/s?k={keyword}&s=featured_rank&page={page}&language=en_US&ref=nb_sb_noss_1&zipCode=37377"""
@@ -71,31 +74,38 @@ class program():
             print("数据处理完成，返回数据")
             print(deal_result)
         else:
-            while result['status_code'] == 200:
-                if result['status_code'] == 400 or result['status_code'] == 401 or result['status_code'] == 403:
+            while result['status_code'] != 200:
+                if result['status_code'] == 400 :
                     print("程序出错")
                     print(result)
                     sys.exit()
-                elif result['status_code'] == 429:
-                    time.sleep(10)
-                    result = self.spider(link)
-                elif result['status_code'] == 499 or result['status_code'] == 520 or result['status_code'] == 500:
-                    result = self.spider(link)
-            print("请求成功，开始处理数据")
-            self.savefile(keyword, page, result['body'])
-            deal_result = AmazonCleaner().goodsList(result['body'])
-            print("数据处理完成，返回数据")
-            print(deal_result)
+                elif result['status_code'] == 401:
+                    print("程序出错")
+                    print(result)
+                elif result['status_code'] == 403:
+                    result = crawl().crawl_main(link)
+                elif result['status_code'] == 499 :
+                    result = crawl().crawl_main(link)
+                elif result['status_code'] == 500:
+                    result = crawl().crawl_main(link)
+                elif result['status_code'] == 520 :
+                    result = crawl().crawl_main(link)
+            else:
+                print("请求成功，开始处理数据")
+                self.savefile(keyword, page, result['body'])
+                deal_result = AmazonCleaner().goodsList(result['body'])
+                print("数据处理完成，返回数据")
+                print(deal_result)
         return deal_result
 
     def program_main(self):
-        cur=self.db.cursor()
+        cur=db.cursor()
         select_sql = """
                     select keyword from keywordlist
                 """
         cur.execute(select_sql)
         rest = cur.fetchall()
-        self.db.commit()
+        db.commit()
         print(rest)
         now = datetime.datetime.now()
         nowdatetime = now.strftime("%Y-%m-%d")
@@ -104,7 +114,7 @@ class program():
         for solokeyword in rest:
             adlist = []
             keyword = solokeyword[0]
-            deal_keyword=keyword.replace(" ","+")
+            deal_keyword=keyword
             print(keyword)
             item_No = 1
             aditem_No = 1
@@ -128,7 +138,7 @@ class program():
                     print(insert_sql)
 
                     cur.execute(insert_sql)
-                    self.db.commit()
+                    db.commit()
                     print("插入成功")
                     item_num =item_num+1
                     print(f"""现在有{item_num}个""")
@@ -148,9 +158,9 @@ class program():
                             select * from asin where ASIN ='{adsoloitem}'
                         """
                 cur.execute(select_sql)
-                self.db.commit()
+                db.commit()
                 rest = cur.fetchall()
-                self.db.commit()
+                db.commit()
                 if len(rest) == 0:
                     IS = 0
                 else:
@@ -161,7 +171,7 @@ class program():
                 aditem_No = aditem_No + 1
                 print(insert_sql)
                 cur.execute(insert_sql)
-                self.db.commit()
+                db.commit()
                 print("插入成功")
     def rate(self):
         keyword_select_sql = """
@@ -169,12 +179,12 @@ class program():
         """
         cur.execute(keyword_select_sql)
         keyword_select_sql_res = cur.fetchall()
-        self.db.commit()
+        db.commit()
         now = datetime.datetime.now()
         nowdatetime = now.strftime("%Y-%m-%d")
         for solokeyword_inf in keyword_select_sql_res:
             solokeyword = solokeyword_inf[2]
-            dealsolokeyword =solokeyword.replace(" ","+")
+            dealsolokeyword =solokeyword
             get_keyword_list = f"""
             select * from keywordranking where keyword= '{dealsolokeyword}' And datetime='{nowdatetime}'
             """
@@ -183,11 +193,11 @@ class program():
             """
             cur.execute(get_keyword_list)
             get_keyword_list_res = cur.fetchall()
-            self.db.commit()
+            db.commit()
             all_num = len(get_keyword_list_res)
             cur.execute(get_keyword_list_myinf)
             get_keyword_list_myinf_res = cur.fetchall()
-            self.db.commit()
+            db.commit()
             yes_num = len(get_keyword_list_myinf_res)
             try:
                 nature_rate = round(yes_num / all_num * 100, 2)
@@ -201,11 +211,11 @@ class program():
                         """
             cur.execute(get_keyword_list)
             get_keyword_list_res = cur.fetchall()
-            self.db.commit()
+            db.commit()
             all_num = len(get_keyword_list_res)
             cur.execute(get_keyword_list_myinf)
             get_keyword_list_myinf_res = cur.fetchall()
-            self.db.commit()
+            db.commit()
             yes_num = len(get_keyword_list_myinf_res)
             try:
                 ad_rate = round(yes_num / all_num * 100, 2)
@@ -216,18 +226,19 @@ class program():
             Insert into keyword_rate(datetime, keyword, nature_rate, ad_rate) VALUES ('{nowdatetime}','{solokeyword}','{nature_rate}','{ad_rate}')
             """
             cur.execute(insert_sql)
-            self.db.commit()
+            db.commit()
 
 def crawl_process():
-    print("开始抓取自然排名和广告排名")
-    program().program_main()
-    print("抓取完毕")
+    # print("开始抓取自然排名和广告排名")
+    # program().program_main()
+    # print("抓取完毕")
     print("开始计算占比")
     program().rate()
     print("占比计算完成")
 
 if __name__== "__main__":
     # job_func是要被执行的函数
-    sched = BlockingScheduler()
-    sched.add_job(crawl_process, 'cron', day_of_week='fri', hour=10, minute=00)
-    sched.start()
+    crawl_process()
+    # sched = BlockingScheduler()
+    # sched.add_job(crawl_process, 'cron', day_of_week='fri', hour=11, minute=48)
+    # sched.start()
